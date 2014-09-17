@@ -32,12 +32,16 @@ void proxy::req_get::on_request(const ioremap::thevoid::http_request &req, const
 	MDS_LOG_INFO("Get: handle request: %s", url_str.c_str());
 	namespace_ptr_t ns;
 	try {
+		MDS_LOG_INFO("Get: detect namespace");
 		ns = server()->get_namespace(url_str, "/get");
+		MDS_LOG_INFO("Get: create elliptics session");
 		auto &&prep_session = server()->prepare_session(url_str, ns);
+		MDS_LOG_INFO("Get: set trace info for elliptics session");
 		m_session = prep_session.first;
 		m_session->set_trace_bit(req.trace_bit());
 		m_session->set_trace_id(req.request_id());
 		m_session->set_timeout(server()->timeout.read);
+		MDS_LOG_INFO("Get: prepare elliptics key");
 		m_key = prep_session.second;
 		m_key.transform(*m_session);
 		m_key.set_id(m_key.id());
@@ -47,6 +51,7 @@ void proxy::req_get::on_request(const ioremap::thevoid::http_request &req, const
 		return;
 	}
 
+	MDS_LOG_INFO("check authorization");
 	if (!server()->check_basic_auth(ns->name, ns->auth_key_for_read, req.headers().get("Authorization"))) {
 		auto token = server()->get_auth_token(req.headers().get("Authorization"));
 		MDS_LOG_INFO("%s: invalid token \"%s\"", url_str.c_str()
@@ -68,6 +73,8 @@ void proxy::req_get::on_request(const ioremap::thevoid::http_request &req, const
 		send_reply(404);
 		return;
 	}
+
+	MDS_LOG_INFO("Get: parse query list");
 
 	auto query_list = req.url().query();
 	m_offset = get_arg<uint64_t>(query_list, "offset", 0);

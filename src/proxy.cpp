@@ -715,10 +715,12 @@ namespace_ptr_t proxy::get_namespace(const ioremap::thevoid::http_request &req, 
 }
 
 namespace_ptr_t proxy::get_namespace(const std::string &scriptname, const std::string &handler_name) {
+	MDS_LOG_INFO("get_namespace: check handler name");
 	if (strncmp(scriptname.c_str(), handler_name.c_str(), handler_name.size())) {
 		throw std::runtime_error("Cannot detect namespace");
 	}
 	std::string str_namespace;
+	MDS_LOG_INFO("get_namespace: getting namespace name");
 	if (scriptname[handler_name.size()] == '-') {
 		auto namespace_end = scriptname.find('/', 1);
 		auto namespace_beg = handler_name.size() + 1;
@@ -731,12 +733,15 @@ namespace_ptr_t proxy::get_namespace(const std::string &scriptname, const std::s
 	} else {
 		throw std::runtime_error("Cannot detect namespace");
 	}
+	MDS_LOG_INFO("get_namespace: namespace=%s", str_namespace.c_str());
 
 	std::lock_guard<std::mutex> lock(m_namespaces_mutex);
+	MDS_LOG_INFO("get_namespace: mutex is locked");
 	auto it = m_namespaces.find(str_namespace);
 	if (it == m_namespaces.end()) {
 		throw std::runtime_error("Cannot detect namespace");
 	}
+	MDS_LOG_INFO("get_namespace: namespace was found");
 
 	return it->second;
 }
